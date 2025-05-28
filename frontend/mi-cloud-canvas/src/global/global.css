@@ -1,0 +1,28 @@
+
+.text_hint {
+    color: rgba(0, 0, 0, 0.5);
+    font-size: 15px;
+    &:hover {
+        cursor: pointer;
+        color: rgba(0, 0, 0, 0.87);
+    }
+
+    &:active {
+        cursor: arrow;
+        color: rgba(0, 0, 0, 0.5);
+    }
+}
+
+.no_select {
+    user-select: none;
+}
+
+.clickable {
+    &:hover {
+        cursor: pointer;
+    }
+
+    &:active {
+        cursor: arrow;
+    }
+}
