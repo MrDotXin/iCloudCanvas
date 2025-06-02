@@ -34,5 +34,10 @@ public class PictureUpdateRequest implements Serializable {
      */
     private List<String> tags;
 
+    /**
+     * 所在的空间
+     */
+    private String spaceId;
+
     private static final long serialVersionUID = 1L;
 }

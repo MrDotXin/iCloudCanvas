@@ -13,6 +13,10 @@
                 <div class="form-layout">
                     <div class="upload-section">
                         <PictureUploader :picture="picture" :onSuccess="onSuccess" />
+
+                        <a-card v-if="picture?.thumbnailUrl" title="缩略图">
+                            <a-image :src="picture?.thumbnailUrl" style="max-width: 20vw; object-fit: contain;" />
+                        </a-card>
                     </div>
                     <div class="form-section">
                         <a-form :label-col="{ span: 6 }" :wrapper-col="{ span: 18 }" layout="horizontal" :model="form"

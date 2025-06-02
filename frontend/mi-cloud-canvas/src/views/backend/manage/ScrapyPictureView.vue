@@ -20,16 +20,22 @@
                 </a-form-item>
             </a-space>
         </a-form>
-        <a-card style="overflow: auto;" title="抓取结果">
+        <a-card style="overflow: auto;">
+            <template #title>
+                抓取结果
+                <a-button type="primary" @click="onChangePage()" :disabled="isSubmitting">下一批</a-button>
+            </template>
             <a-spin :spinning="isSubmittingInfo">
-                <a-space>
-                    <TagSelector style="min-width: 30vw;" :tag="form.tags" :onTagSelected="onTagSelected"></TagSelector>
-                    <CategorySelector style="min-width: 16vw;" :category="form.category" :onCategorySelected="onCategorySelected"></CategorySelector>
-                    <a-button :disabled="!(resultPictureList.length > 0)" type="primary"@click="onSubmitInfo">设置统一信息</a-button>
-                    <a-button :disabled="!(resultPictureList.length > 0) && !isAllOpered" danger @click="onRejectAll">一键拒绝</a-button>
-                    <a-button :disabled="!(resultPictureList.length > 0) && !isAllOpered" type="primary" @click="handleReviewAcceptAll">一键过审</a-button>
-                </a-space>
-                <a-table :columns="columns" :data-source="resultPictureList" size="small" row-key="id">
+                <a-card title="图片设置">
+                    <a-space>
+                        <TagSelector style="min-width: 30vw;" :tag="form.tags" :onTagSelected="onTagSelected"></TagSelector>
+                        <CategorySelector style="min-width: 16vw;" :category="form.category" :onCategorySelected="onCategorySelected"></CategorySelector>
+                        <a-button type="primary"@click="onSubmitInfo">设置统一信息</a-button>
+                        <a-button :disabled="!(resultPictureList.length > 0) || isAllOpered" danger @click="onRejectAll">一键拒绝</a-button>
+                        <a-button :disabled="!(resultPictureList.length > 0) || isAllOpered" type="primary" @click="handleReviewAcceptAll">一键过审</a-button>
+                    </a-space>
+                </a-card>
+                <a-table :columns="columns" :data-source="resultPictureList" size="small" row-key="id" >
                     <template #url="{ record }">
                         <img :src="record.url" alt="加载中.." style="width: 120px; object-fit: cover;" />
                     </template>
@@ -73,7 +79,7 @@ import CategorySelector from '@/components/Picture/CategorySelector.vue';
 const formState = ref<API.PictureUploadBatchRequest>({
     count: 0,
     searchText: "",
-    picPrefix: "",
+    picPrefix: ""
 });
 
 const form = ref({
@@ -191,13 +197,13 @@ const onSubmitInfo = async () => {
 
     message.success('批量更新照片信息成功!');
     isSubmittingInfo.value = false;
-    isAllOpered.value = true;
 }
 
 const rules = {
     count: [{ required: true, trigger: 'blur' }],
     searchText: [{ required: true, trigger: 'blur' }],
     picPrefix: [{ required: true, trigger: 'blur' }],
+    page: [{ required: true, trigger: 'blur' }],
 };
 
 const layout = {
@@ -225,14 +231,27 @@ const handleReviewAcceptAll = async () => {
     isAllOpered.value = true;
 }
 
+const onChangePage = async () => {
+    isAllOpered.value = false;
+    await handleFinish();
+}
+
+var currentStart = 1;
+var isFinish = false;
 const handleFinish = async () => {
+    if (isFinish) {
+        message.success('没有更多数据了!');
+        return;
+    }
+
     console.log(formState.value);
     isSubmitting.value = true;
     try {
         const response = await uploadPictureByBatchUsingPost({
             count: formState.value.count,
             searchText: formState.value.searchText,
-            picPrefix: formState.value.picPrefix
+            picPrefix: formState.value.picPrefix,
+            start: currentStart,
         });
 
         if (response.data.code !== 0) {
@@ -243,6 +262,10 @@ const handleFinish = async () => {
             message.success('批量导入图片成功!');
 
             resultPictureList.value = response.data.data || [];
+            currentStart += resultPictureList.value.length;
+            if (formState.value.count && resultPictureList.value.length < formState.value.count) {
+                isFinish = true;
+            }
         }
     } catch (error) {
         console.log(error);

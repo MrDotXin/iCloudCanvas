@@ -1,7 +1,9 @@
 package com.mrdotxin.icloudcanvas.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.NumberUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.mrdotxin.icloudcanvas.common.ErrorCode;
 import com.mrdotxin.icloudcanvas.config.CosConfig;
 import com.mrdotxin.icloudcanvas.exception.BusinessException;
@@ -9,22 +11,23 @@ import com.mrdotxin.icloudcanvas.model.dto.file.UploadFileResult;
 import com.mrdotxin.icloudcanvas.service.OSService;
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.exception.CosClientException;
-import com.qcloud.cos.model.COSObject;
-import com.qcloud.cos.model.COSObjectInputStream;
-import com.qcloud.cos.model.PutObjectRequest;
-import com.qcloud.cos.model.PutObjectResult;
+import com.qcloud.cos.exception.CosServiceException;
+import com.qcloud.cos.exception.MultiObjectDeleteException;
+import com.qcloud.cos.model.*;
+import com.qcloud.cos.model.ciModel.persistence.CIObject;
 import com.qcloud.cos.model.ciModel.persistence.ImageInfo;
 import com.qcloud.cos.model.ciModel.persistence.PicOperations;
-import com.qcloud.cos.transfer.Upload;
+import com.qcloud.cos.model.ciModel.persistence.ProcessResults;
 import com.qcloud.cos.utils.IOUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.context.ConfigurationPropertiesAutoConfiguration;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class CosClientService implements OSService {
@@ -34,8 +37,6 @@ public class CosClientService implements OSService {
 
     @Resource
     private COSClient cosClient;
-    @Autowired
-    private ConfigurationPropertiesAutoConfiguration configurationPropertiesAutoConfiguration;
 
     @Override
     public String upload(String fileKey, File file) {
@@ -50,7 +51,7 @@ public class CosClientService implements OSService {
     }
 
     @Override
-    public UploadFileResult uploadWithInfo(String fileKey, File file) {
+    public UploadFileResult uploadRawWithInfo(String fileKey, File file) {
         try {
             PutObjectRequest putObjectRequest = new PutObjectRequest(
                     cosConfig.getBucketName(),
@@ -64,24 +65,93 @@ public class CosClientService implements OSService {
             putObjectRequest.setPicOperations(picOperations);
 
             PutObjectResult putObjectResult = cosClient.putObject(putObjectRequest);
-
-            UploadFileResult uploadFileResult = new UploadFileResult();
             ImageInfo imageInfo = putObjectResult.getCiUploadResult().getOriginalInfo().getImageInfo();
-
-            int picWidth = imageInfo.getWidth();
-            int picHeight = imageInfo.getHeight();
-            double picScale = NumberUtil.round(picWidth * 1.0 / picHeight, 2).doubleValue();
-            uploadFileResult.setPicWidth(picWidth);
-            uploadFileResult.setPicHeight(picHeight);
-            uploadFileResult.setPicScale(picScale);
-            uploadFileResult.setPicFormat(imageInfo.getFormat());
-            uploadFileResult.setPicSize(FileUtil.size(file));
-            uploadFileResult.setUrl(cosConfig.getHost() + fileKey);
-
-            return uploadFileResult;
+            return buildResult(fileKey, file, null, null, imageInfo);
         } catch (CosClientException e) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, e.getMessage());
         }
+    }
+
+    @Override
+    public UploadFileResult uploadWithInfo(String fileKey, File file) {
+        PutObjectRequest putObjectRequest = new PutObjectRequest(cosConfig.getBucketName(), fileKey, file);
+        // 设置生成缩略图和压缩图
+        PicOperations picOperations = new PicOperations();
+        picOperations.setIsPicInfo(1);
+        List<PicOperations.Rule> rules = new ArrayList<>();
+        if (!fileKey.endsWith(".webp")) {
+            rules.add(getWebpPicOperations(fileKey));
+        }
+
+        if (FileUtil.size(file) > 100 * 1024) {
+            rules.add(getThumbnailPicOperations(fileKey));
+        }
+
+        picOperations.setRules(rules);
+        putObjectRequest.setPicOperations(picOperations);
+
+        // 处理生成结果
+        PutObjectResult putObjectResult = cosClient.putObject(putObjectRequest);
+        ImageInfo imageInfo = putObjectResult.getCiUploadResult().getOriginalInfo().getImageInfo();
+
+        ProcessResults processResults = putObjectResult.getCiUploadResult().getProcessResults();
+        List<CIObject> objects = processResults.getObjectList();
+        if (CollUtil.isNotEmpty(objects)) {
+            CIObject ciObject = objects.get(0);
+            CIObject thumbnailObject = ciObject;
+            if (objects.size() > 1) {
+                thumbnailObject = objects.get(1);
+            }
+
+            return buildResult(fileKey, file, ciObject, thumbnailObject, imageInfo);
+        }
+
+        return buildResult(fileKey, file, null, null, imageInfo);
+    }
+
+    private PicOperations.Rule getWebpPicOperations(String fileKey) {
+        String webKey = FileUtil.mainName(fileKey) + ".webp";
+        PicOperations.Rule compressionRule = new PicOperations.Rule();
+        compressionRule.setRule("imageMogr2/format/webp");
+        compressionRule.setBucket(cosConfig.getBucketName());
+        compressionRule.setFileId(webKey);
+
+        return compressionRule;
+    }
+
+    private PicOperations.Rule getThumbnailPicOperations(String fileKey) {
+        String thumbnailKey = FileUtil.mainName(fileKey) + "_thumbnail." + FileUtil.getSuffix(fileKey);
+        PicOperations.Rule rule = new PicOperations.Rule();
+        rule.setFileId(thumbnailKey);
+        rule.setBucket(cosConfig.getBucketName());
+        rule.setRule(String.format("imageMogr2/thumbnail/%sx%s>", 512, 512));
+        return rule;
+    }
+
+    public UploadFileResult buildResult(String fileKey, File file, CIObject compressed, CIObject thumbnail, ImageInfo rawImage) {
+        UploadFileResult uploadFileResult = new UploadFileResult();
+
+        int picWidth = ObjectUtil.isNull(compressed) ? rawImage.getWidth() : compressed.getWidth();
+        int picHeight = ObjectUtil.isNull(compressed) ? rawImage.getHeight() : compressed.getHeight();
+        String picFormat = ObjectUtil.isNull(compressed) ? rawImage.getFormat() : compressed.getFormat();
+
+        double picScale = NumberUtil.round(picWidth * 1.0 / picHeight, 2).doubleValue();
+        uploadFileResult.setPicWidth(picWidth);
+        uploadFileResult.setPicHeight(picHeight);
+        uploadFileResult.setPicScale(picScale);
+        uploadFileResult.setPicFormat(picFormat);
+        uploadFileResult.setPicSize(ObjectUtil.isNull(compressed) ? FileUtil.size(file) : compressed.getSize().longValue());
+        uploadFileResult.setUrl(cosConfig.getHost() + (ObjectUtil.isNull(compressed) ? fileKey : compressed.getKey()));
+
+        if (ObjectUtil.isNotNull(compressed)) {
+            uploadFileResult.setRawFormat(FileUtil.getSuffix(fileKey));
+        }
+
+        if (ObjectUtil.isNotNull(thumbnail)) {
+            uploadFileResult.setThumbnailUrl(cosConfig.getHost() + thumbnail.getKey());
+        }
+
+        return uploadFileResult;
     }
 
     @Override
@@ -101,6 +171,36 @@ public class CosClientService implements OSService {
         try {
             String key = url.substring(cosConfig.getHost().length());
             cosClient.deleteObject(cosConfig.getBucketName(), key);
+        } catch (CosClientException e) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, e.getMessage());
+        }
+    }
+
+    @Override
+    public void removeObjectBatchByUrl(List<String> strings) {
+        try {
+            List<DeleteObjectsRequest.KeyVersion> keyVersions =
+                    strings.stream()
+                            .map(key -> new DeleteObjectsRequest.KeyVersion(
+                                            key.substring(cosConfig.getHost().length())
+                                    )
+                            ).collect(Collectors.toList());
+            DeleteObjectsRequest request = new DeleteObjectsRequest(cosConfig.getBucketName());
+            request.setKeys(keyVersions);
+            cosClient.deleteObjects(request);
+        } catch (CosClientException e) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, e.getMessage());
+        }
+    }
+
+    @Override
+    public void removeObjectByUrlIfExists(String url) {
+        try {
+            String key = url.substring(cosConfig.getHost().length());
+            if (cosClient.doesObjectExist(cosConfig.getBucketName(), key)) {
+                cosClient.deleteObject(cosConfig.getBucketName(), key);
+            }
+
         } catch (CosClientException e) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, e.getMessage());
         }

@@ -20,12 +20,32 @@
             <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
             <result property="editTime" column="editTime" jdbcType="TIMESTAMP"/>
             <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
+        <result property="reviewStatus" column="reviewStatus" jdbcType="INTEGER"/>
+        <result property="reviewerId" column="reviewerId" jdbcType="BIGINT"/>
+        <result property="reviewTime" column="reviewTime" jdbcType="TIMESTAMP"/>
+        <result property="rawFormat" column="rawFormat" jdbcType="VARCHAR"/>
             <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
     </resultMap>
 
-    <sql id="Base_Column_List">
-        id,url,name,introduction,category,tags,
-        picSize,picWidth,picHeight,picScale,picFormat,
-        userId,createTime,editTime,updateTime,isDelete
-    </sql>
+    <delete id="deleteFromDatabase" parameterType="string">
+        DELETE
+        FROM picture
+        WHERE id = #{id}
+    </delete>
+
+    <select id="selectKPriorDeletedPicture"
+            resultType="com.mrdotxin.icloudcanvas.model.dto.picture.inner.PictureDeleteParams">
+        SELECT id, url, rawFormat
+        FROM picture
+        WHERE isDelete = 1
+        ORDER BY updateTime ASC
+            LIMIT #{limits}
+    </select>
+
+    <delete id="deletePicturesByBatch">
+        DELETE FROM picture WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
 </mapper>

@@ -34,7 +34,8 @@
                     :pagination="pagination" 
                     @change="handleTableChange"
                     size="small" row-key="id"
-                    
+                    :row-selection="{selectedRowKeys: selectionKeys, onChange: onSelectionChange}"
+                    :columnWidth="selectionKeys.length > 0 ? '50px' : '0px'"
                     >
                     <template #reviewStatus="{ record }">
                         <a-tag :color="ColorEnums.PIC_REVIEW_TAG_MAP[record.reviewStatus]">
@@ -43,7 +44,7 @@
 
                     </template>
                     <template #url="{ record }">
-                        <img :src="record.url" alt="加载中.." style="width: 120px; object-fit: cover;" />
+                        <a-image :src="record.url" alt="加载中.." style="width: 120px; object-fit: cover;" />
                     </template>
                     <template #category="{ record }">
                         <a-tag :color="ColorEnums.PIC_CATEGORY_COLOR_MAP[record.category]">
@@ -61,6 +62,8 @@
                         <div>宽度：{{ record.picWidth }}</div>
                         <div>高度：{{ record.picHeight }}</div>
                         <div>宽高比：{{ record.picScale }}</div>
+                        <div v-if="record.rawFormat">原格式: {{ record.rawFormat }}</div>
+                        <div>使用缩略图: {{ record.thumbnailUrl ? '是' : '否' }}</div>
                         <div>大小：{{ (record.picSize / 1024).toFixed(2) }}KB</div>
                     </template>
                     <template #createTime="{ record }">
@@ -220,6 +223,11 @@ const columns = [
         fixed: 'right'
     },
 ];
+const selectionKeys = ref<string[]>([]);
+const onSelectionChange = (selectedRowKeys: string[]) => {
+    console.log('selectedRowKeys changed: ', selectedRowKeys);
+    selectionKeys.value = selectedRowKeys;
+};
 
 const isAscending = ref(false);
 const searchParam = ref<API.PictureQueryRequest>({

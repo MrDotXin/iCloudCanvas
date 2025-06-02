@@ -3,6 +3,10 @@ spring:
     name: iCloudCanvas
   profiles:
     active: local
+  redis:
+    database: 0
+    host: 127.0.0.1
+    port: 6379
 
   mvc:
     pathmatch:
@@ -39,6 +43,7 @@ mybatis-plus:
 # 一定要加, 不然swagger 功能会被默认ban掉
 knife4j:
   enable: true
+
 
 
 limit:

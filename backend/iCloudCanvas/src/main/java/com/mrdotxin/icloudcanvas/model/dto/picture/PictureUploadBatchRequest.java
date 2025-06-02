@@ -24,9 +24,20 @@ public class PictureUploadBatchRequest implements Serializable {
     private String picPrefix;
 
     /**
-     * count 需要一次抓取的数量
+     * count 需要抓取的数据总量
      */
     private Integer count;
+
+    /**
+     * 爬取的开始图片索引
+     */
+    private Integer start;
+
+
+    /**
+     * 所在的空间
+     */
+    private String spaceId;
 
     private static final long serialVersionUID = 1L;
 }

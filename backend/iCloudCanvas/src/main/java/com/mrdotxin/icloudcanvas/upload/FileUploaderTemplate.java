@@ -5,6 +5,7 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.mrdotxin.icloudcanvas.common.ErrorCode;
 import com.mrdotxin.icloudcanvas.exception.BusinessException;
+import com.mrdotxin.icloudcanvas.exception.ThrowUtils;
 import com.mrdotxin.icloudcanvas.model.dto.file.UploadFileResult;
 import com.mrdotxin.icloudcanvas.service.OSService;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +22,7 @@ public abstract class FileUploaderTemplate {
     @Resource
     private OSService osService;
 
-    public final UploadFileResult uploadFile(Object inputSource, String uploadFilePath) {
+    public final UploadFileResult uploadFile(Object inputSource, String uploadFilePath, Long limitSize) {
         String suffix = validPicture(inputSource);
         String uuid = RandomUtil.randomString(16);
         String uploadFilename = String.format("%s_%s.%s", DateUtil.formatDate(new Date()), uuid, suffix);
@@ -30,6 +31,10 @@ public abstract class FileUploaderTemplate {
         try {
             file = File.createTempFile(uploadPath, null);
             transferToTempFile(inputSource, file);
+
+            if (limitSize > 0) {
+                ThrowUtils.throwIf(FileUtil.size(file) > limitSize, ErrorCode.OPERATION_ERROR, "空间超限! 无法保存个人空间");
+            }
 
             return osService.uploadWithInfo(uploadPath, file);
         } catch (IOException e) {

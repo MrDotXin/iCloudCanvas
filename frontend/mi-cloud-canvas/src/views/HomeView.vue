@@ -32,7 +32,7 @@
           <div @click="toPictureDetail(picture)">
           <a-card hoverable >
             <template #cover>
-                <img  :src="picture.url" style="height: 180px; object-fit: cover;" :alt="picture.name" />
+                <img  :src="picture.thumbnailUrl ? picture.thumbnailUrl : picture.url" style="height: 180px; object-fit: cover;" :alt="picture.name" />
               </template>
               <a-card-meta :title="picture.name">
                 <template #description>

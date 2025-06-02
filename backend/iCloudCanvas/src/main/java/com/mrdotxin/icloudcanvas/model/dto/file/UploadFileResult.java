@@ -1,5 +1,6 @@
 package com.mrdotxin.icloudcanvas.model.dto.file;
 
+import lombok.Builder;
 import lombok.Data;
 
 @Data
@@ -9,6 +10,11 @@ public class UploadFileResult {
      * 图片 url
      */
     private String url;
+
+    /**
+     * 缩略图url
+     */
+    private String thumbnailUrl;
 
     /**
      * 图片名称
@@ -40,5 +46,9 @@ public class UploadFileResult {
      */
     private String picFormat;
 
+    /**
+     * 原图像的类型
+     */
+    private String rawFormat;
 
 }

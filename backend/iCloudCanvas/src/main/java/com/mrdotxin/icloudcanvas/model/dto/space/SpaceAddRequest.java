@@ -1,0 +1,15 @@
+package com.mrdotxin.icloudcanvas.model.dto.space;
+
+import lombok.Data;
+
+import java.io.Serializable;
+
+@Data
+public class SpaceAddRequest implements Serializable {
+
+    private String spaceName;
+
+    private String spaceLevel;
+
+    private static final long serialVersionUID = 1L;
+}

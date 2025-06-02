@@ -3,6 +3,7 @@ package com.mrdotxin.icloudcanvas.utils;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
 import com.mrdotxin.icloudcanvas.common.ErrorCode;
+import com.mrdotxin.icloudcanvas.common.PageRequest;
 import com.mrdotxin.icloudcanvas.exception.BusinessException;
 import com.mrdotxin.icloudcanvas.exception.ThrowUtils;
 import net.bytebuddy.implementation.bytecode.Throw;
@@ -22,8 +23,11 @@ public class ScrapyUtils {
 
     private static final Logger log = LoggerFactory.getLogger(ScrapyUtils.class);
 
-    static public List<String> searchPictureUrlFromBing(String searchText, Integer count) {
-        String url = String.format("https://cn.bing.com/images/async?q=%s&mmasync=1", searchText);
+    static public List<String> searchPictureUrlFromBing(String searchText, Integer count, Integer pageStart) {
+        String url = String.format(
+                "https://cn.bing.com/images/async?q=%s&mmasync=1&first=%d&count=%d",
+                searchText, pageStart, count
+        );
 
         try {
             Document document = Jsoup.connect(url).get();

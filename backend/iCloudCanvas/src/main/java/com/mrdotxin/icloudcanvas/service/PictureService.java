@@ -7,11 +7,10 @@ import com.mrdotxin.icloudcanvas.model.dto.picture.PictureQueryRequest;
 import com.mrdotxin.icloudcanvas.model.dto.picture.PictureReviewRequest;
 import com.mrdotxin.icloudcanvas.model.dto.picture.PictureUploadBatchRequest;
 import com.mrdotxin.icloudcanvas.model.dto.picture.PictureUploadRequest;
+import com.mrdotxin.icloudcanvas.model.dto.space.SpaceCheckInfo;
 import com.mrdotxin.icloudcanvas.model.entity.Picture;
 import com.mrdotxin.icloudcanvas.model.entity.User;
 import com.mrdotxin.icloudcanvas.model.vo.PictureVO;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -77,4 +76,32 @@ public interface PictureService extends IService<Picture> {
      * @param loginUser
      */
     void fillPictureReviewStatus(Picture picture, User loginUser);
+
+    /**
+     * @param picture 释放图片对象对应的资源
+     */
+    void FreePictureResource(Picture picture);
+
+    /**
+     * 如果图片被删除, 则返还剩余额度
+     * @param picture 删除的图片对象
+     */
+    void revertSpaceQuota(Picture picture);
+
+    /**
+     * @param pictureUploadRequest
+     * @param loginUser
+     */
+    SpaceCheckInfo getRevertedSpaceQuota(PictureUploadRequest pictureUploadRequest, User loginUser, Picture oldPictureSpaceId);
+
+    /**
+     * @param picture   照片
+     * @param loginUser 当前操作用户
+     */
+    void checkPictureAuth(Picture picture, User loginUser);
+
+    /**
+     * 根据当前额度更新
+     */
+    void resetPictureSpace(SpaceCheckInfo spaceCheckInfo);
 }

@@ -193,11 +193,13 @@ declare namespace API {
     picScale?: number
     picSize?: string
     picWidth?: number
+    rawFormat?: string
     reviewMessage?: string
     reviewStatus?: number
     reviewTime?: string
     reviewerId?: string
     tags?: string
+    thumbnailUrl?: string
     updateTime?: string
     url?: string
     userId?: string
@@ -256,6 +258,7 @@ declare namespace API {
     count?: number
     picPrefix?: string
     searchText?: string
+    start?: number
   }
 
   type PictureVO = {
@@ -270,7 +273,9 @@ declare namespace API {
     picScale?: number
     picSize?: string
     picWidth?: number
+    rawFormat?: string
     tags?: string[]
+    thumbnailUrl?: string
     updateTime?: string
     url?: string
     user?: UserVO

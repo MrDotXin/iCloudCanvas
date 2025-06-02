@@ -132,10 +132,29 @@ public class Picture implements Serializable {
     private Date reviewTime;
 
     /**
+     * 原图像的类型
+     */
+    @TableField(value = "rawFormat")
+    private String rawFormat;
+
+    /**
+     * 缩略图url
+     */
+    @TableField(value = "thumbnailUrl")
+    private String thumbnailUrl;
+
+    /**
+     * 所在的空间
+     */
+    @TableField(value = "spaceId")
+    private Long spaceId;
+
+    /**
      * 逻辑删除
      */
     @TableField(value = "isDelete")
     private Integer isDelete;
+
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

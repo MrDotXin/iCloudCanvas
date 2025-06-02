@@ -1,5 +1,6 @@
 package com.mrdotxin.icloudcanvas.controller;
 
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mrdotxin.icloudcanvas.annotation.AuthCheck;
@@ -12,12 +13,14 @@ import com.mrdotxin.icloudcanvas.exception.BusinessException;
 import com.mrdotxin.icloudcanvas.exception.ThrowUtils;
 import com.mrdotxin.icloudcanvas.model.dto.picture.*;
 import com.mrdotxin.icloudcanvas.model.entity.Picture;
+import com.mrdotxin.icloudcanvas.model.entity.Space;
 import com.mrdotxin.icloudcanvas.model.entity.User;
 import com.mrdotxin.icloudcanvas.model.enums.FileUploadTypeEnum;
 import com.mrdotxin.icloudcanvas.model.enums.PictureReviewStatusEnum;
 import com.mrdotxin.icloudcanvas.model.vo.PictureVO;
 import com.mrdotxin.icloudcanvas.model.vo.UserVO;
 import com.mrdotxin.icloudcanvas.service.PictureService;
+import com.mrdotxin.icloudcanvas.service.SpaceService;
 import com.mrdotxin.icloudcanvas.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -26,15 +29,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.xml.transform.Result;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
-/**
- *
- */
 @RestController
 @RequestMapping("/picture")
 @Slf4j
@@ -45,6 +44,9 @@ public class PictureController {
 
     @Resource
     private PictureService pictureService;
+
+    @Resource
+    private SpaceService spaceService;
 
     @PostMapping("/upload")
     public BaseResponse<PictureVO> uploadPicture(@RequestParam("file") MultipartFile file, PictureUploadRequest pictureUploadRequest, HttpServletRequest httpServletRequest) {
@@ -66,7 +68,7 @@ public class PictureController {
 
     @PostMapping("/upload/url/batch")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<List<PictureVO>> uploadPictureByBatch(@RequestBody PictureUploadBatchRequest pictureUploadBatchRequest, HttpServletRequest httpServletRequest) {
+    public BaseResponse<List<PictureVO>> grabPicturesByPrompt(@RequestBody PictureUploadBatchRequest pictureUploadBatchRequest, HttpServletRequest httpServletRequest) {
         User loginUser = userService.getLoginUser(httpServletRequest);
         List<PictureVO> pictureVOList = pictureService.uploadPictureBatch(pictureUploadBatchRequest, loginUser);
 
@@ -83,9 +85,8 @@ public class PictureController {
         Picture oldPicture = pictureService.getById(id);
         ThrowUtils.throwIf(Objects.isNull(oldPicture), ErrorCode.NOT_FOUND_ERROR, "该图片不存在");
 
-        if (!oldPicture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-        }
+        pictureService.checkPictureAuth(oldPicture, loginUser);
+        pictureService.revertSpaceQuota(oldPicture);
 
         boolean result = pictureService.removeById(id);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
@@ -115,24 +116,28 @@ public class PictureController {
     }
 
     @GetMapping("/get/id")
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Picture> getPictureById(@RequestParam("id") Long id) {
+    public BaseResponse<Picture> getPictureById(@RequestParam("id") Long id, HttpServletRequest httpServletRequest) {
         ThrowUtils.throwIf(id <= 0, ErrorCode.OPERATION_ERROR);
 
         Picture picture = pictureService.getById(id);
 
         ThrowUtils.throwIf(Objects.isNull(picture), ErrorCode.NOT_FOUND_ERROR);
+
+        pictureService.checkPictureAuth(picture, userService.getLoginUser(httpServletRequest));
 
         return ResultUtils.success(picture);
     }
 
     @GetMapping("/getVO/id")
-    public BaseResponse<PictureVO> getPictureVOById(@RequestParam("id") Long id) {
+    public BaseResponse<PictureVO> getPictureVOById(@RequestParam("id") Long id, HttpServletRequest httpServletRequest) {
         ThrowUtils.throwIf(id <= 0, ErrorCode.OPERATION_ERROR);
 
         Picture picture = pictureService.getById(id);
 
         ThrowUtils.throwIf(Objects.isNull(picture), ErrorCode.NOT_FOUND_ERROR);
+        if (ObjectUtil.isNotNull(picture.getSpaceId())) {
+            pictureService.checkPictureAuth(picture, userService.getLoginUser(httpServletRequest));
+        }
 
         PictureVO pictureVO = PictureVO.objToVo(picture);
         UserVO userVO =  userService.getUserVO(userService.getById(pictureVO.getUserId()));
@@ -155,7 +160,6 @@ public class PictureController {
     }
 
     @PostMapping("/list/page/vo")
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Page<PictureVO>> listPictureVOByPage(@RequestBody PictureQueryRequest pictureQueryRequest, HttpServletRequest httpServletRequest) {
         long current = pictureQueryRequest.getCurrent();
         long pageSize = pictureQueryRequest.getPageSize();
@@ -163,6 +167,18 @@ public class PictureController {
         ThrowUtils.throwIf(pageSize > 30, ErrorCode.FORBIDDEN_ERROR);
 
         pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
+        Long spaceId = pictureQueryRequest.getSpaceId();
+        if (ObjectUtil.isNull(spaceId)) {
+            pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
+        } else {
+            User loginUser = userService.getLoginUser(httpServletRequest);
+            Space space = spaceService.getById(spaceId);
+            ThrowUtils.throwIf(ObjectUtil.isNull(space), ErrorCode.OPERATION_ERROR, "空间不存在");
+            if (!loginUser.getId().equals(space.getUserId())) {
+                throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "你无法查看当前空间内容");
+            }
+        }
+
         Page<Picture> picturePage = pictureService.page(new Page<>(current, pageSize),
                 pictureService.getQueryWrapper(pictureQueryRequest));
 
@@ -188,9 +204,7 @@ public class PictureController {
 
         // 本人或者管理员
         User loginUser = userService.getLoginUser(httpServletRequest);
-        if (!oldPicture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-        }
+        pictureService.checkPictureAuth(oldPicture, loginUser);
         pictureService.fillPictureReviewStatus(picture, loginUser);
         boolean result = pictureService.updateById(picture);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);

@@ -153,7 +153,48 @@ watch(
 
 首先对于后端使用`Hutool.downFile(url)` 可以直接获取到文件本身，其次我们要对`url`还有文件本身进行校验
 
-## FAQ 
+
+
+### 图片懒加载
+
+我们可以使用intersecionObjserver对图片进行懒加载，或者使用
+
+[这个JS API库](https://github.com/aFarkas/lazysizes?tab=readme-ov-file#readme)
+
+```javascript
+<img data-src="image.jpg" alt="示例图片" class="lazy" />
+<img data-src="image2.jpg" alt="示例图片" class="lazy" />
+
+<script>
+  // 获取所有需要懒加载的图片
+  const lazyImages = document.querySelectorAll('img.lazy');
+
+  // 创建 Intersection Observer
+  const observer = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        // 将 data-src 的值赋给 src 属性
+        img.src = img.dataset.src;
+        img.classList.remove('lazy');
+        observer.unobserve(img); // 停止观察已加载的图片
+      }
+    });
+  });
+
+  // 观察每个图片
+  lazyImages.forEach(image => observer.observe(image));
+</script>
+
+```
+
+### 浏览器缓存
+
+通过设置`Cache-Control: public, max-age、Cache-Control: private, no-store` 可以设置缓存
+
+
+
+## FAQ
 
 ### 关于:model 与 v-model:model的区别
 
@@ -212,4 +253,3 @@ compositionstart → 输入拼音 → compositionend → 最终确认汉字
     ...(options || {}),
   })
 ```
-
