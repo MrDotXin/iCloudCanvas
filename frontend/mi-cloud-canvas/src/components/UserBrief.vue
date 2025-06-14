@@ -8,11 +8,11 @@
                 >
                     <template #content>
                         <a-menu>
-                            <a-menu-item>
+                            <a-menu-item key="userSpace" @click="handleToUserSpace">
                                 <UserOutlined />
                                 <span>个人中心</span>
                             </a-menu-item>
-                            <a-menu-item @click="handleLogout">
+                            <a-menu-item key="userLogout" @click="handleLogout">
                                 <LoginOutlined />
                                 <span>退出登录</span>
                             </a-menu-item>
@@ -46,7 +46,7 @@ import { message } from 'ant-design-vue';
 const userStore = useLoginUserStore();
 
 onMounted(async () => {
-    // 获取用户信息
+    // 获取用户信息 
     await userStore.getLoginUser();
 });
 
@@ -77,6 +77,10 @@ const handleLogout = async () => {
     }
 
     window.location.reload();
+};
+
+const handleToUserSpace = () => {
+    router.push('/user/space');
 };
 
 </script>

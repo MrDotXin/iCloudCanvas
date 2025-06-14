@@ -1,11 +1,13 @@
 package com.mrdotxin.icloudcanvas.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mrdotxin.icloudcanvas.common.ErrorCode;
 import com.mrdotxin.icloudcanvas.constant.CommonConstant;
 import com.mrdotxin.icloudcanvas.exception.BusinessException;
+import com.mrdotxin.icloudcanvas.exception.ThrowUtils;
 import com.mrdotxin.icloudcanvas.mapper.UserMapper;
 import com.mrdotxin.icloudcanvas.model.dto.user.UserQueryRequest;
 import com.mrdotxin.icloudcanvas.model.entity.User;
@@ -170,6 +172,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public boolean isAdmin(User user) {
         return user != null && UserRoleEnum.ADMIN.getValue().equals(user.getUserRole());
+    }
+
+    @Override
+    public void validateIsAdminOrOwner(User user, Long belongId) {
+        ThrowUtils.throwIf(ObjectUtil.isNull(user), ErrorCode.NOT_LOGIN_ERROR);
+        ThrowUtils.throwIf(!isAdmin(user) || !user.getId().equals(belongId), ErrorCode.NO_AUTH_ERROR);
     }
 
     /**

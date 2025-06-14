@@ -1,4 +1,4 @@
-import ACCESS_ENUM from "@/enum/AccessEnum";
+import { ACCESS_ENUM } from "@/enum/AccessEnum";
 
 export default function checkAccess(require : string, user : API.LoginUserVO, isLogin : boolean) {
 

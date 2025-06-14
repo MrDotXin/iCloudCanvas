@@ -15,7 +15,6 @@
         </div>
       </a-col>
     </a-row>
-
     <UserBrief />
   </div>
 </template>
@@ -32,12 +31,12 @@ const router = useRouter();
 
 const current = ref<string[]>(['home'])
 
-router.afterEach((to, from) => {
+router.afterEach((to, _) => {
   current.value = [to.path.replace('/', '')];
 });
 
 const doNavgatorFilter = (route: any) => {
-  return !(route.meta && route.meta.hidden === true);
+  return (route.meta && route.meta.show === true);
 }
 
 const doIconSelect = (route: any) => {

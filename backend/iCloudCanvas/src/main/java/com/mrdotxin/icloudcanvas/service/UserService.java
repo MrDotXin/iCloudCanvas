@@ -68,6 +68,14 @@ public interface UserService extends IService<User> {
     boolean isAdmin(User user);
 
     /**
+     * s
+     * @param user
+     * @param belongId
+     * @return
+     */
+    void validateIsAdminOrOwner(User user, Long belongId);
+
+    /**
      * 用户注销
      *
      * @param request

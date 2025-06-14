@@ -25,7 +25,7 @@ public class doPictureClean {
     @Resource
     private PictureMapper pictureMapper;
 
-    @Scheduled(cron = "0/30 * * * * ?")
+    @Scheduled(cron = "0 0/30 * * * ?")
     public void doClean() {
         int batchSize = 50;
         List<PictureDeleteParams> pictureDeleteParams = pictureMapper.selectKPriorDeletedPicture(batchSize);

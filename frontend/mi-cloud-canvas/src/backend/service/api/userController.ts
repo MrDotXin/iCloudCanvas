@@ -15,10 +15,7 @@ export async function addUserUsingPost(body: API.UserAddRequest, options?: { [ke
 }
 
 /** deleteUser POST /api/user/delete */
-export async function deleteUserUsingPost(
-  body: API.DeleteRequest,
-  options?: { [key: string]: any }
-) {
+export async function deleteUserUsingPost(body: API.DeleteRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponseBoolean_>('/api/user/delete', {
     method: 'POST',
     headers: {
@@ -68,10 +65,7 @@ export async function getUserVoByIdUsingGet(
 }
 
 /** listUserByPage POST /api/user/list/page */
-export async function listUserByPageUsingPost(
-  body: API.UserQueryRequest,
-  options?: { [key: string]: any }
-) {
+export async function listUserByPageUsingPost(body: API.UserQueryRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponsePageUser_>('/api/user/list/page', {
     method: 'POST',
     headers: {
@@ -83,10 +77,7 @@ export async function listUserByPageUsingPost(
 }
 
 /** listUserVOByPage POST /api/user/list/page/vo */
-export async function listUserVoByPageUsingPost(
-  body: API.UserQueryRequest,
-  options?: { [key: string]: any }
-) {
+export async function listUserVoByPageUsingPost(body: API.UserQueryRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponsePageUserVO_>('/api/user/list/page/vo', {
     method: 'POST',
     headers: {
@@ -98,10 +89,7 @@ export async function listUserVoByPageUsingPost(
 }
 
 /** userLogin POST /api/user/login */
-export async function userLoginUsingPost(
-  body: API.UserLoginRequest,
-  options?: { [key: string]: any }
-) {
+export async function userLoginUsingPost(body: API.UserLoginRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponseLoginUserVO_>('/api/user/login', {
     method: 'POST',
     headers: {
@@ -121,10 +109,7 @@ export async function userLogoutUsingPost(options?: { [key: string]: any }) {
 }
 
 /** userRegister POST /api/user/register */
-export async function userRegisterUsingPost(
-  body: API.UserRegisterRequest,
-  options?: { [key: string]: any }
-) {
+export async function userRegisterUsingPost(body: API.UserRegisterRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponseLong_>('/api/user/register', {
     method: 'POST',
     headers: {
@@ -136,10 +121,7 @@ export async function userRegisterUsingPost(
 }
 
 /** updateUser POST /api/user/update */
-export async function updateUserUsingPost(
-  body: API.UserUpdateRequest,
-  options?: { [key: string]: any }
-) {
+export async function updateUserUsingPost(body: API.UserUpdateRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponseBoolean_>('/api/user/update', {
     method: 'POST',
     headers: {
@@ -151,10 +133,7 @@ export async function updateUserUsingPost(
 }
 
 /** updateMyUser POST /api/user/update/my */
-export async function updateMyUserUsingPost(
-  body: API.UserUpdateMyRequest,
-  options?: { [key: string]: any }
-) {
+export async function updateMyUserUsingPost(body: API.UserUpdateMyRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponseBoolean_>('/api/user/update/my', {
     method: 'POST',
     headers: {

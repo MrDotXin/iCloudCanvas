@@ -57,6 +57,9 @@
                         <a-descriptions-item label="大小">
                             {{ formatSize(Number(picture.picSize)) }}
                         </a-descriptions-item>
+                        <a-descriptions-item label="更新时间">
+                            {{ dayjs(picture.updateTime).format('YYYY-MM-DD HH:mm:ss')  }}
+                        </a-descriptions-item>
                     </a-descriptions>
                     <a-space wrap>  
                     <a-button v-if="canEdit" type="default" @click="doEdit">  
@@ -99,13 +102,14 @@ import { useRoute, useRouter } from 'vue-router';
 import { formatSize } from '@/global/index';
 import COLOR_ENUM from '@/enum/PictureColorEnum';
 import { useLoginUserStore } from '@/stores/user';
-import ACCESS_ENUM from '@/enum/AccessEnum';
+import { ACCESS_ENUM } from '@/enum/AccessEnum';
 import AddPictureView from './backend/manage/AddPictureView.vue';
 import { doFileDownload } from '@/global/index';
 import {
     EditOutlined,
     DeleteOutlined,
 } from '@ant-design/icons-vue';
+import dayjs from 'dayjs';
 
 const picture = ref<API.PictureVO>({});
 const userStore = useLoginUserStore();
@@ -132,7 +136,7 @@ const confirmDelete = async () => {
 
         if (response.data.code === 0) {
             message.success("删除成功!");
-            router.push("/");
+            router.go(-1);
         } else {
             message.success("删除失败!");
         }

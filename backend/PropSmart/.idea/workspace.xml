@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="4cc4c489-2bca-4050-9e82-ff8da5d34ce8" name="更改" comment="">
+      <change beforePath="$PROJECT_DIR$/../iCloudCanvas/src/main/java/com/mrdotxin/icloudcanvas/job/doPictureClean.java" beforeDir="false" afterPath="$PROJECT_DIR$/../iCloudCanvas/src/main/java/com/mrdotxin/icloudcanvas/job/doPictureClean.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../iCloudCanvas/src/main/java/com/mrdotxin/icloudcanvas/model/dto/picture/PictureQueryRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../iCloudCanvas/src/main/java/com/mrdotxin/icloudcanvas/model/dto/picture/PictureQueryRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../iCloudCanvas/src/main/java/com/mrdotxin/icloudcanvas/service/impl/PictureServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../iCloudCanvas/src/main/java/com/mrdotxin/icloudcanvas/service/impl/PictureServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../frontend/mi-cloud-canvas/src/backend/service/api/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../frontend/mi-cloud-canvas/src/backend/service/api/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../frontend/mi-cloud-canvas/src/backend/service/api/pictureController.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../frontend/mi-cloud-canvas/src/backend/service/api/pictureController.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../frontend/mi-cloud-canvas/src/backend/service/api/typings.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../frontend/mi-cloud-canvas/src/backend/service/api/typings.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../frontend/mi-cloud-canvas/src/views/HomeView.vue" beforeDir="false" afterPath="$PROJECT_DIR$/../../frontend/mi-cloud-canvas/src/views/HomeView.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../frontend/mi-cloud-canvas/src/views/backend/manage/ScrapyPictureView.vue" beforeDir="false" afterPath="$PROJECT_DIR$/../../frontend/mi-cloud-canvas/src/views/backend/manage/ScrapyPictureView.vue" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
+  </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "MrDotXin"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/MrDotXin/iCloudCanvas.git",
+    "accountId": "9d4b89b5-6b5f-45e3-8dc3-f4b51ffe5a41"
+  }
+}]]></component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 2
+}]]></component>
+  <component name="ProjectId" id="2xyakKl6060UHOSeKlwXWiWIQJ7" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "main",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "D:/workFromSit/SoftwareTestingCourseDesign/PropSmart/backend",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9f38398b9061-39b83d9b5494-intellij.indexing.shared.core-IU-241.18034.62" />
+        <option value="bundled-js-predefined-1d06a55b98c1-0b3e54e931b4-JavaScript-IU-241.18034.62" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="应用程序级" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="默认任务">
+      <changelist id="4cc4c489-2bca-4050-9e82-ff8da5d34ce8" name="更改" comment="" />
+      <created>1748912909619</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1748912909619</updated>
+      <workItem from="1748912910842" duration="778000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>

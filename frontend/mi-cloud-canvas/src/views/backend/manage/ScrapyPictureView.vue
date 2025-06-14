@@ -30,7 +30,7 @@
                     <a-space>
                         <TagSelector style="min-width: 30vw;" :tag="form.tags" :onTagSelected="onTagSelected"></TagSelector>
                         <CategorySelector style="min-width: 16vw;" :category="form.category" :onCategorySelected="onCategorySelected"></CategorySelector>
-                        <a-button type="primary"@click="onSubmitInfo">设置统一信息</a-button>
+                        <a-button :disabled="!(resultPictureList.length > 0)" type="primary" @click="onSubmitInfo">设置统一信息</a-button>
                         <a-button :disabled="!(resultPictureList.length > 0) || isAllOpered" danger @click="onRejectAll">一键拒绝</a-button>
                         <a-button :disabled="!(resultPictureList.length > 0) || isAllOpered" type="primary" @click="handleReviewAcceptAll">一键过审</a-button>
                     </a-space>
@@ -67,7 +67,7 @@
     </a-card>
 </template>
 <script lang="ts" setup>
-import { deletePictureUsingPost, doPictureReviewUsingPost, updatePictureUsingPost, uploadPictureByBatchUsingPost } from '@/backend/service/api/pictureController';
+import { deletePictureUsingPost, doPictureReviewUsingPost, updatePictureUsingPost, grabPicturesByPromptUsingPost } from '@/backend/service/api/pictureController';
 import { message } from 'ant-design-vue';
 import { ref } from 'vue';
 
@@ -131,7 +131,7 @@ const columns = [
     },
 ];
 
-const rejectedList = ref<Set<String>>(new Set()); // 用于存储已拒绝的ID
+const rejectedList = ref<Set<string>>(new Set()); // 用于存储已拒绝的ID
 const isDangerMode = ref(false);
 const selectedDeleteId = ref(''); 
 const handleHover = (isHover: boolean, id : string) => {
@@ -163,18 +163,17 @@ const onRejectAll = async () => {
     for (const picture of resultPictureList.value) {
         if (picture.id) {
             if (!rejectedList.value.has(picture.id)) {
-                const response = await deletePictureUsingPost({ id: picture.id });
-
-                if (response.data.code!== 0) {
-                    console.error(`照片${picture.name}删除失败! ${response.data.message}`);
-                
-                } else {
-                    rejectedList.value.add(picture.id);
-                    message.success('批量拒绝图片成功!');
-                }
+                deletePictureUsingPost({ id: picture.id }).then(response => {
+                    if (response.data.code!== 0) {
+                        console.error(`照片${picture.name}删除失败! ${response.data.message}`);
+                        rejectedList.value.delete(picture.id as string);
+                    } 
+                });
+                rejectedList.value.add(picture.id);
             }
         }
     }
+    message.success('批量拒绝图片成功!');
     isAllOpered.value = true;
 }
 
@@ -236,8 +235,8 @@ const onChangePage = async () => {
     await handleFinish();
 }
 
-var currentStart = 1;
-var isFinish = false;
+let currentStart = 1;
+let isFinish = false;
 const handleFinish = async () => {
     if (isFinish) {
         message.success('没有更多数据了!');
@@ -247,7 +246,7 @@ const handleFinish = async () => {
     console.log(formState.value);
     isSubmitting.value = true;
     try {
-        const response = await uploadPictureByBatchUsingPost({
+        const response = await grabPicturesByPromptUsingPost({
             count: formState.value.count,
             searchText: formState.value.searchText,
             picPrefix: formState.value.picPrefix,
@@ -257,7 +256,6 @@ const handleFinish = async () => {
         if (response.data.code !== 0) {
             console.error('批量导入图片失败', response.data.message);
             message.error('批量导入图片失败! ' + response.data.message);
-            return;
         } else {
             message.success('批量导入图片成功!');
 
@@ -275,7 +273,7 @@ const handleFinish = async () => {
     isSubmitting.value = false;
 }
 
-const handleFinishFailed = (errors: any) => {
+const handleFinishFailed = (errors: string) => {
     console.log(errors);
 };
 

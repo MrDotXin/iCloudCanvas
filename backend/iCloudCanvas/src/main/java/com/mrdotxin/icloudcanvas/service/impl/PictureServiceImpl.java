@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mrdotxin.icloudcanvas.common.DeleteRequest;
 import com.mrdotxin.icloudcanvas.common.ErrorCode;
 import com.mrdotxin.icloudcanvas.exception.BusinessException;
 import com.mrdotxin.icloudcanvas.exception.ThrowUtils;
@@ -35,6 +36,7 @@ import com.mrdotxin.icloudcanvas.utils.ScrapyUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -60,7 +62,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     private SpaceService spaceService;
 
     @Resource
-    private TransactionTemplate transactionTemplate;
+    private TransactionTemplate transactionTemplate; // 使用显示的事务管理器来管理事务
+    @Autowired
+    private PictureMapper pictureMapper;
 
     @Override
     public QueryWrapper<Picture> getQueryWrapper(PictureQueryRequest pictureQueryRequest) {
@@ -80,6 +84,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         String reviewMessage = pictureQueryRequest.getReviewMessage();
         Long reviewerId = pictureQueryRequest.getReviewerId();
         Long spaceId = pictureQueryRequest.getSpaceId();
+        Date editTimeBegin = pictureQueryRequest.getEditTimeBegin();
+        Date editTimeEnd = pictureQueryRequest.getEditTimeEnd();
         String sortField = pictureQueryRequest.getSortField();
         String sortOrder = pictureQueryRequest.getSortOrder();
 
@@ -109,11 +115,13 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         queryWrapper.eq(ObjUtil.isNotEmpty(picHeight) && picHeight > 0, "picHeight", picHeight);
         queryWrapper.eq(ObjUtil.isNotEmpty(picScale) && picScale > 0.0, "picScale", picScale);
         queryWrapper.eq(ObjUtil.isNotEmpty(picSize) && picSize > 0, "picSize", picSize);
+        queryWrapper.gt(ObjectUtil.isNotNull(editTimeBegin), "editTime", editTimeBegin);
+        queryWrapper.lt(ObjectUtil.isNotNull(editTimeEnd), "editTime", editTimeEnd);
 
         if (ObjectUtil.isNotNull(spaceId)) {
             queryWrapper.eq("spaceId", spaceId);
         } else {
-            queryWrapper.eq("spaceId", null);
+            queryWrapper.isNull("spaceId");
         }
 
         if (CollUtil.isNotEmpty(tags)) {
@@ -141,62 +149,55 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
         Long pictureId = pictureUploadRequest.getId();
         Picture oldPicture = null;
-        boolean isSave = Objects.nonNull(pictureId) && pictureId > 0;
-        if (isSave) {
+        boolean isUpdate = Objects.nonNull(pictureId) && pictureId > 0;
+        if (isUpdate) {
             oldPicture = this.getById(pictureId);
             ThrowUtils.throwIf(Objects.isNull(oldPicture), ErrorCode.NOT_FOUND_ERROR, "图片不存在");
-            if (!userService.isAdmin(loginUser) && !loginUser.getId().equals(pictureId)) {
-                throw new BusinessException(ErrorCode.FORBIDDEN_ERROR, "禁止操作!");
-            }
+            userService.validateIsAdminOrOwner(loginUser, oldPicture.getUserId());
         }
 
-        // 得到撤销当前已存在的影响后的相对额度
+        // 得到撤销当前已存在的影响后的相对额度，没在空间里面则无效
         SpaceCheckInfo spaceCheckInfo = getRevertedSpaceQuota(pictureUploadRequest, loginUser, oldPicture);
 
-        ThrowUtils.throwIf(spaceCheckInfo.getLeftCount() == 0, ErrorCode.OPERATION_ERROR, "空间超限");
+        ThrowUtils.throwIf(spaceCheckInfo.getCount().equals(spaceCheckInfo.getMaxCount()), ErrorCode.OPERATION_ERROR, "空间超限");
 
         String uploadPathPrefix = ObjectUtil.isNull(pictureUploadRequest.getSpaceId()) ?
                 String.format("public/%s", loginUser.getId()) :
                 String.format("space/%s", pictureUploadRequest.getSpaceId());
 
-        UploadFileResult uploadFileResult = fileManager.uploadFile(pictureUploadRequest.getUploadType(), multipartFile, uploadPathPrefix, spaceCheckInfo.getLeftSize());
-        final Picture [] picture_f = { null };
+        UploadFileResult uploadFileResult = fileManager.uploadFile(pictureUploadRequest.getUploadType(), multipartFile, uploadPathPrefix, spaceCheckInfo.getMaxSize() - spaceCheckInfo.getSize());
+        Picture picture = buildPictureWithDTO(loginUser, uploadFileResult, pictureId, oldPicture);
+        fillPictureReviewStatus(picture, loginUser);
+        picture.setSpaceId(spaceCheckInfo.getSpaceId());
+
+        if (StrUtil.isNotBlank(pictureUploadRequest.getPicName())) {
+            picture.setName(pictureUploadRequest.getPicName());
+        }
+
         try {
-            transactionTemplate.execute(status -> {
-                try {
-                    // 更新空间状态
-                    if (spaceCheckInfo.getSpaceId() >= 0) {
-                        spaceCheckInfo.setLeftSize(spaceCheckInfo.getLeftCount() + uploadFileResult.getPicSize());
-                        spaceCheckInfo.setLeftCount(spaceCheckInfo.getLeftCount() + 1);
-                        resetPictureSpace(spaceCheckInfo);
-                    }
-
-                    // 保存新信息
-                    picture_f[0] = buildPictureWithDTO(loginUser, uploadFileResult, pictureId);
-                    fillPictureReviewStatus(picture_f[0], loginUser);
-                    if (StrUtil.isNotBlank(pictureUploadRequest.getPicName())) {
-                        picture_f[0].setName(pictureUploadRequest.getPicName());
-                    }
-                    boolean result = isSave ? this.save(picture_f[0]) : this.updateById(picture_f[0]);
-                    ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "上传文件失败");
-
-                    return 0L;
-                } catch (BusinessException e) {
-                    status.setRollbackOnly(); // 回滚
-                    throw e;
+            transactionTemplate.executeWithoutResult(status -> {
+                // 更新空间状态
+                if (spaceCheckInfo.getSpaceId() >= 0) {
+                    spaceCheckInfo.setSize(spaceCheckInfo.getSize() + uploadFileResult.getPicSize());
+                    spaceCheckInfo.setCount(spaceCheckInfo.getCount() + 1);
+                    resetPictureSpace(spaceCheckInfo);
                 }
+
+                boolean result = isUpdate ? this.updateById(picture) : this.save(picture);
+                ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "上传文件失败");
+
             });
         } catch(BusinessException e) {
-            if (ObjectUtil.isNotNull(picture_f[0])) {
-                FreePictureResource(picture_f[0]);
+            if (ObjectUtil.isNotNull(picture)) {
+                freePictureResource(picture);
             }
             throw e;
         }
 
         // 删除旧信息，这样如果前面的操作失败了, 就可以回滚, 相当于没有删
-        FreePictureResource(oldPicture);
+        freePictureResource(oldPicture);
 
-        return PictureVO.objToVo(picture_f[0]);
+        return PictureVO.objToVo(picture);
     }
 
     @Override
@@ -271,7 +272,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         Long id = pictureReviewRequest.getId();
         Integer reviewStatus = pictureReviewRequest.getReviewStatus();
         PictureReviewStatusEnum statusEnum = PictureReviewStatusEnum.getEnumByValue(reviewStatus);
-        String reviewMessage = pictureReviewRequest.getReviewMessage();
+
         if (Objects.isNull(id) || Objects.isNull(statusEnum) || PictureReviewStatusEnum.REVIEWING.equals(statusEnum)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -289,6 +290,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         BeanUtils.copyProperties(pictureReviewRequest, updatePicture);
         updatePicture.setReviewerId(loginUser.getId());
         updatePicture.setReviewTime(new Date());
+        updatePicture.setReviewMessage(pictureReviewRequest.getReviewMessage());
         ThrowUtils.throwIf(!this.updateById(updatePicture), ErrorCode.SYSTEM_ERROR);
     }
 
@@ -299,7 +301,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     }
 
     @Override
-    public void FreePictureResource(Picture picture) {
+    public void freePictureResource(Picture picture) {
         if (ObjectUtil.isNull(picture)) return;
 
         String url = picture.getUrl();
@@ -313,7 +315,17 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     @Override
     public void revertSpaceQuota(Picture picture) {
+        Long spaceId = picture.getSpaceId();
+        if (Objects.isNull(spaceId) || spaceId == 0) {
+            return;
+        }
 
+        boolean result = spaceService.lambdaUpdate()
+                .eq(Space::getId, spaceId)
+                .setSql("totalCount = totalCount - 1")
+                .setSql(String.format("totalSize = totalSize - %d", picture.getPicSize()))
+                .update();
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "无法更新");
     }
 
     @Override
@@ -330,7 +342,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             }
         }
 
-        SpaceCheckInfo spaceCheckInfo = new SpaceCheckInfo(-1L, -1L, -1L);
+        SpaceCheckInfo spaceCheckInfo = new SpaceCheckInfo(-1L, -1L, 0L, 0L, 0L);
         if (ObjectUtil.isNotNull(spaceId)) {
             Space space = spaceService.getById(spaceId);
             ThrowUtils.throwIf(ObjectUtil.isNull(space), ErrorCode.NOT_FOUND_ERROR, "空间不存在");
@@ -339,16 +351,39 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
                 throw new BusinessException(ErrorCode.FORBIDDEN_ERROR, "仅管理员或本人可以上传空间");
             }
 
-            spaceCheckInfo.setLeftCount(space.getMaxCount() - space.getTotalCount());
-            spaceCheckInfo.setLeftSize(space.getMaxSize() - space.getTotalSize());
+            spaceCheckInfo.setCount(space.getTotalCount());
+            spaceCheckInfo.setSize(space.getTotalSize());
+            spaceCheckInfo.setMaxCount(space.getMaxCount());
+            spaceCheckInfo.setMaxSize(space.getMaxSize());
             spaceCheckInfo.setSpaceId(space.getId());
+
+            // 撤销原图后，空间剩余额度会增加
             if (ObjectUtil.isNotNull(oldPicture)) {
-                spaceCheckInfo.setLeftCount(spaceCheckInfo.getLeftCount() - 1);
-                spaceCheckInfo.setLeftSize(spaceCheckInfo.getLeftSize() - oldPicture.getPicSize());
+                spaceCheckInfo.setCount(spaceCheckInfo.getCount() -  1);
+                spaceCheckInfo.setSize(spaceCheckInfo.getSize() - oldPicture.getPicSize());
             }
         }
 
         return spaceCheckInfo;
+    }
+
+    @Override
+    public void deletePicture(DeleteRequest deleteRequest, User loginUser) {
+        Long id = deleteRequest.getId();
+
+        Picture oldPicture = this.getById(id);
+        ThrowUtils.throwIf(Objects.isNull(oldPicture), ErrorCode.NOT_FOUND_ERROR, "该图片不存在");
+
+        this.checkPictureAuth(oldPicture, loginUser);
+
+        transactionTemplate.executeWithoutResult(status -> {
+            this.revertSpaceQuota(oldPicture);
+
+            boolean result = this.removeById(id);
+            ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        });
+
+        freePictureResource(oldPicture);
     }
 
     @Override
@@ -376,17 +411,21 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
         UpdateWrapper<Space> queryWrapper = new UpdateWrapper<>();
         queryWrapper.eq("id", spaceCheckInfo.getSpaceId());
-        queryWrapper.set("totalCount", spaceCheckInfo.getLeftCount());
-        queryWrapper.set("totalSize", spaceCheckInfo.getLeftSize());
+        queryWrapper.set("totalCount",  spaceCheckInfo.getCount());
+        queryWrapper.set("totalSize", spaceCheckInfo.getSize());
 
         spaceService.update(queryWrapper);
     }
 
 
-    private static @NotNull Picture buildPictureWithDTO(User loginUser, Object pictureProperties, Long pictureId) {
+    private static @NotNull Picture buildPictureWithDTO(User loginUser, Object pictureProperties, Long pictureId, Picture oldPicture) {
         Picture picture = new Picture();
+        if (ObjectUtil.isNotNull(oldPicture)) {
+            BeanUtils.copyProperties(oldPicture, picture);
+        }
 
         BeanUtils.copyProperties(pictureProperties, picture);
+
         picture.setUserId(loginUser.getId());
 
         if (Objects.nonNull(pictureId) && pictureId > 0) {

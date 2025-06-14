@@ -9,9 +9,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class SpaceCheckInfo {
 
-    Long leftSize;
+    Long size;
 
-    Long leftCount;
+    Long count;
 
     Long spaceId;
+
+    Long maxSize;
+
+    Long maxCount;
 }

@@ -2,7 +2,7 @@ import { type Router, type RouteLocationNormalized, type NavigationGuardNext, us
 
 import { useLoginUserStore } from '@/stores/user.ts';
 import router from '@/router';
-import ACCESS_ENUM from '@/enum/AccessEnum';
+import { ACCESS_ENUM } from '@/enum/AccessEnum';
 import checkAccess from './checkAccess';
 let firstGetLoginUser = true; 
 

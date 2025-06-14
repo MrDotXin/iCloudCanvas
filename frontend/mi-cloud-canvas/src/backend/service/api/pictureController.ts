@@ -11,10 +11,7 @@ export async function listPictureCategoryAllUsingGet(options?: { [key: string]: 
 }
 
 /** deletePicture POST /api/picture/delete */
-export async function deletePictureUsingPost(
-  body: API.DeleteRequest,
-  options?: { [key: string]: any }
-) {
+export async function deletePictureUsingPost(body: API.DeleteRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponseBoolean_>('/api/picture/delete', {
     method: 'POST',
     headers: {
@@ -26,10 +23,7 @@ export async function deletePictureUsingPost(
 }
 
 /** editPicture POST /api/picture/edit */
-export async function editPictureUsingPost(
-  body: API.PictureEditRequest,
-  options?: { [key: string]: any }
-) {
+export async function editPictureUsingPost(body: API.PictureEditRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponseBoolean_>('/api/picture/edit', {
     method: 'POST',
     headers: {
@@ -71,10 +65,7 @@ export async function getPictureVoByIdUsingGet(
 }
 
 /** listPictureByPage POST /api/picture/list/page */
-export async function listPictureByPageUsingPost(
-  body: API.PictureQueryRequest,
-  options?: { [key: string]: any }
-) {
+export async function listPictureByPageUsingPost(body: API.PictureQueryRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponsePagePicture_>('/api/picture/list/page', {
     method: 'POST',
     headers: {
@@ -86,10 +77,7 @@ export async function listPictureByPageUsingPost(
 }
 
 /** listPictureVOByPage POST /api/picture/list/page/vo */
-export async function listPictureVoByPageUsingPost(
-  body: API.PictureQueryRequest,
-  options?: { [key: string]: any }
-) {
+export async function listPictureVoByPageUsingPost(body: API.PictureQueryRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponsePagePictureVO_>('/api/picture/list/page/vo', {
     method: 'POST',
     headers: {
@@ -101,10 +89,7 @@ export async function listPictureVoByPageUsingPost(
 }
 
 /** doPictureReview POST /api/picture/review */
-export async function doPictureReviewUsingPost(
-  body: API.PictureReviewRequest,
-  options?: { [key: string]: any }
-) {
+export async function doPictureReviewUsingPost(body: API.PictureReviewRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponseBoolean_>('/api/picture/review', {
     method: 'POST',
     headers: {
@@ -132,10 +117,7 @@ export async function listPictureTagAllUsingGet(options?: { [key: string]: any }
 }
 
 /** updatePicture POST /api/picture/update */
-export async function updatePictureUsingPost(
-  body: API.PictureUpdateRequest,
-  options?: { [key: string]: any }
-) {
+export async function updatePictureUsingPost(body: API.PictureUpdateRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponseBoolean_>('/api/picture/update', {
     method: 'POST',
     headers: {
@@ -202,11 +184,8 @@ export async function uploadPictureByUrlUsingPost(
   })
 }
 
-/** uploadPictureByBatch POST /api/picture/upload/url/batch */
-export async function uploadPictureByBatchUsingPost(
-  body: API.PictureUploadBatchRequest,
-  options?: { [key: string]: any }
-) {
+/** grabPicturesByPrompt POST /api/picture/upload/url/batch */
+export async function grabPicturesByPromptUsingPost(body: API.PictureUploadBatchRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponseListPictureVO_>('/api/picture/upload/url/batch', {
     method: 'POST',
     headers: {

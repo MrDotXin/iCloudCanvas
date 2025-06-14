@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
-import ACCESS_ENUM from '@/enum/AccessEnum'
+import { ACCESS_ENUM } from '@/enum/AccessEnum'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -8,14 +8,14 @@ const router = createRouter({
     {
       path: '/',
       redirect: '/home',
-      meta:{
-        hidden: true
-      }
     },
     {
       path: '/home',
       name: '主页',
       component: HomeView,
+      meta:{
+        show: true
+      }
     },
     {
       path: '/about',
@@ -24,6 +24,9 @@ const router = createRouter({
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
       component: () => import('../views/AboutView.vue'),
+      meta:{
+        show: true
+      }
     },  
     {
       path: '/login',
@@ -32,9 +35,7 @@ const router = createRouter({
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
       component: () => import('@/views/UserLoginView.vue'),
-      meta:{
-        hidden: true
-      }
+
     },  
     {
       path: '/register',
@@ -42,25 +43,18 @@ const router = createRouter({
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
-      component: () => import('@/views/UserRegisterView.vue'),
-      meta:{
-        hidden: true
-      } 
+      component: () => import('@/views/UserRegisterView.vue'), 
     },  
     {
       path: '/backend/entry',
       name: '管理员后台登录',
       component: () => import('@/views/backend/BackendEntry.vue'),
-      meta: {
-        hidden: true
-      }
     },
     {
       path: '/backend/center',
       name: '管理员后台中心',
       component: () => import('@/views/backend/BackendManage.vue'),
       meta: {
-        hidden: true,
         access: ACCESS_ENUM.ADMIN
       }
     },
@@ -68,16 +62,27 @@ const router = createRouter({
       path: '/picture/:id',
       name: '图片信息详情页',
       component: () => import('@/views/PictureInfoView.vue'),
+    },
+    {
+      path: '/user',
+      name: '用户信息',
       meta: {
-        hidden: true,
-      }
+        access: ACCESS_ENUM.USER
+      },
+      children: [
+        {
+          path: '/user/space',
+          name: '用户个人空间',
+          component: () => import('@/views/User/UserSpace.vue'),
+        }
+      ]
     },
     {
       path: '/:catchAll(.*)',
       name: '404',
       component: () => import('@/views/F0FView.vue'),
       meta: {
-        hidden: true
+        disableGlobalHeader: true
       }
     }
   ],

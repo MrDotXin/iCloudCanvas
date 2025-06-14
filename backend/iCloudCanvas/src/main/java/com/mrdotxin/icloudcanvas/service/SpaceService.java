@@ -41,4 +41,5 @@ public interface SpaceService extends IService<Space> {
      *
      */
     Space getByUserId(Long id);
+
 }

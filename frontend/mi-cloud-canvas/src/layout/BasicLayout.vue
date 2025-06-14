@@ -1,7 +1,7 @@
 <template>
     <a-layout class="basic-layout" style="min-height: 100vh;">
         <!-- 导航栏 -->
-        <div v-if="!route.fullPath.startsWith('/backend')">
+        <div v-if="!route.fullPath.startsWith('/backend') && !(route.meta?.disableGlobalHeader === true)">
             <a-layout-header class="custom-header" >
                 <GlobalHeader />
             </a-layout-header>

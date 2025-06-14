@@ -46,7 +46,7 @@ public class SpaceServiceImpl extends ServiceImpl<spaceMapper, Space>
 
         if (isAdding) {
             ThrowUtils.throwIf(StrUtil.isBlank(spaceName), ErrorCode.PARAMS_ERROR, "空间名不能为空");
-            ThrowUtils.throwIf(ObjectUtil.isNull(spaceLevel), ErrorCode.PARAMS_ERROR, "空间级别不能为空D");
+            ThrowUtils.throwIf(ObjectUtil.isNull(spaceLevel), ErrorCode.PARAMS_ERROR, "空间级别不能为空");
         }
 
         if (ObjectUtil.isNotNull(spaceLevel) && ObjectUtil.isNull(spaceLevelEnum)) {
@@ -90,18 +90,14 @@ public class SpaceServiceImpl extends ServiceImpl<spaceMapper, Space>
         Space space = new Space();
         BeanUtils.copyProperties(spaceAddRequest, space);
 
-        if (StrUtil.isBlank(space.getSpaceName())) {
-            space.setSpaceName("默认空间");
-        }
-
-        if (ObjectUtil.isNull(spaceAddRequest.getSpaceLevel())) {
-            space.setSpaceLevel(SpaceLevelEnum.COMMON.getValue());
-        }
-
+        if (StrUtil.isBlank(space.getSpaceName())) {space.setSpaceName("默认空间");}
+        if (ObjectUtil.isNull(spaceAddRequest.getSpaceLevel())) {space.setSpaceLevel(SpaceLevelEnum.COMMON.getValue());}
         if (!SpaceLevelEnum.COMMON.getValue().equals(space.getSpaceType()) &&
                 !userService.isAdmin(loginUser)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "非管理员不能随意修改空间等级");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "非管理员不能随意设置空间等级, 仅能设置为普通用户空间");
         }
+
+        space.setUserId(loginUser.getId());
 
         validateSpace(space, true);
 

@@ -80,16 +80,9 @@ public class PictureController {
         ThrowUtils.throwIf(Objects.isNull(deleteRequest) || deleteRequest.getId() <= 0,
                 ErrorCode.OPERATION_ERROR);
         User loginUser = userService.getLoginUser(httpServletRequest);
-        Long id = deleteRequest.getId();
 
-        Picture oldPicture = pictureService.getById(id);
-        ThrowUtils.throwIf(Objects.isNull(oldPicture), ErrorCode.NOT_FOUND_ERROR, "该图片不存在");
+        pictureService.deletePicture(deleteRequest, loginUser);
 
-        pictureService.checkPictureAuth(oldPicture, loginUser);
-        pictureService.revertSpaceQuota(oldPicture);
-
-        boolean result = pictureService.removeById(id);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
     }
 

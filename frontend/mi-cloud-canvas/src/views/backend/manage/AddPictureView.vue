@@ -1,4 +1,4 @@
-<template>
+    <template>
     <div class="add-picture">
         <a-card class="form-container" style="padding: 0;">
             <template #title v-if="!isEditMode">
@@ -12,7 +12,7 @@
             <a-spin :spinning="isSubmitting">
                 <div class="form-layout">
                     <div class="upload-section">
-                        <PictureUploader :picture="picture" :onSuccess="onSuccess" />
+                        <PictureUploader :picture="picture" :spaceId="props.spaceId" :onSuccess="onSuccess" />
 
                         <a-card v-if="picture?.thumbnailUrl" title="缩略图">
                             <a-image :src="picture?.thumbnailUrl" style="max-width: 20vw; object-fit: contain;" />
@@ -95,13 +95,17 @@ const props = defineProps({
         type: String,
         default: ""
     },
+    spaceId: {
+        type: String,
+        default: ""
+    },
     onEditSuccess: {
         default: () => () => { console.log("泥嚎"); }
     }
 });
 
 watch(
-    () => props.pictureId,
+    () => [props.pictureId, props.spaceId],
     () => {
         if (props.pictureId) {
             console.log("开始加载图片信息 ", props.pictureId);
@@ -215,7 +219,8 @@ const onSubmit = async () => {
             form.value.tags.sort((a : string, b : string) => { return a < b ? -1 : a === b ? 0 : 1; });
             const response = await updatePictureUsingPost({
                 ...form.value,
-                id: picture.value.id
+                id: picture.value.id,
+                spaceId: props.spaceId,
             });
             if (response.data.code === 0) {
                 message.success("上传成功!");

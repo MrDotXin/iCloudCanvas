@@ -3,6 +3,7 @@ package com.mrdotxin.icloudcanvas.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.mrdotxin.icloudcanvas.common.DeleteRequest;
 import com.mrdotxin.icloudcanvas.model.dto.picture.PictureQueryRequest;
 import com.mrdotxin.icloudcanvas.model.dto.picture.PictureReviewRequest;
 import com.mrdotxin.icloudcanvas.model.dto.picture.PictureUploadBatchRequest;
@@ -80,7 +81,7 @@ public interface PictureService extends IService<Picture> {
     /**
      * @param picture 释放图片对象对应的资源
      */
-    void FreePictureResource(Picture picture);
+    void freePictureResource(Picture picture);
 
     /**
      * 如果图片被删除, 则返还剩余额度
@@ -89,10 +90,19 @@ public interface PictureService extends IService<Picture> {
     void revertSpaceQuota(Picture picture);
 
     /**
+     * 会尝试根据传入的图片信息来返回如果原图片删除带来的对额度影响
+     * 如果不存在空间则返回负值
      * @param pictureUploadRequest
      * @param loginUser
      */
     SpaceCheckInfo getRevertedSpaceQuota(PictureUploadRequest pictureUploadRequest, User loginUser, Picture oldPictureSpaceId);
+
+    /**
+     *
+     * @param deleteRequest id
+     * @param loginUser 登录用户
+     */
+    void deletePicture(DeleteRequest deleteRequest, User loginUser);
 
     /**
      * @param picture   照片

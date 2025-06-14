@@ -11,6 +11,12 @@ declare namespace API {
     message?: string
   }
 
+  type BaseResponseListSpaceLevelInfo_ = {
+    code?: number
+    data?: SpaceLevelInfo[]
+    message?: string
+  }
+
   type BaseResponseListString_ = {
     code?: number
     data?: string[]
@@ -71,6 +77,12 @@ declare namespace API {
     message?: string
   }
 
+  type BaseResponseSpaceVO_ = {
+    code?: number
+    data?: SpaceVO
+    message?: string
+  }
+
   type BaseResponseString_ = {
     code?: number
     data?: string
@@ -101,6 +113,11 @@ declare namespace API {
   type getPictureVOByIdUsingGETParams = {
     /** id */
     id: string
+  }
+
+  type getSpaceVOByUserIdUsingGETParams = {
+    /** userId */
+    userId: string
   }
 
   type getUserByIdUsingGETParams = {
@@ -198,6 +215,7 @@ declare namespace API {
     reviewStatus?: number
     reviewTime?: string
     reviewerId?: string
+    spaceId?: string
     tags?: string
     thumbnailUrl?: string
     updateTime?: string
@@ -210,12 +228,15 @@ declare namespace API {
     id?: string
     introduction?: string
     name?: string
+    spaceId?: string
     tags?: string[]
   }
 
   type PictureQueryRequest = {
     category?: string
     current?: number
+    editTimeBegin?: string
+    editTimeEnd?: string
     id?: string
     introduction?: string
     name?: string
@@ -231,6 +252,7 @@ declare namespace API {
     searchText?: string
     sortField?: string
     sortOrder?: string
+    spaceId?: string
     tags?: string[]
     userId?: string
   }
@@ -251,6 +273,7 @@ declare namespace API {
     id?: string
     introduction?: string
     name?: string
+    spaceId?: string
     tags?: string[]
   }
 
@@ -258,6 +281,7 @@ declare namespace API {
     count?: number
     picPrefix?: string
     searchText?: string
+    spaceId?: string
     start?: number
   }
 
@@ -274,12 +298,62 @@ declare namespace API {
     picSize?: string
     picWidth?: number
     rawFormat?: string
+    spaceId?: string
     tags?: string[]
     thumbnailUrl?: string
     updateTime?: string
     url?: string
     user?: UserVO
     userId?: string
+  }
+
+  type SpaceAddRequest = {
+    spaceLevel?: number
+    spaceName?: string
+  }
+
+  type SpaceEditRequest = {
+    spaceName?: string
+    spaceType?: string
+  }
+
+  type SpaceLevelInfo = {
+    levelDescription?: string
+    levelMaxCount?: string
+    levelMaxSize?: string
+    levelName?: string
+    value?: number
+  }
+
+  type SpaceTypeModifyRequest = {
+    spaceId?: string
+    spaceType?: number
+  }
+
+  type SpaceUpdateRequest = {
+    maxCount?: string
+    maxSize?: string
+    spaceId?: string
+    spaceLevel?: number
+    spaceName?: string
+    spaceType?: string
+  }
+
+  type SpaceVO = {
+    createTime?: string
+    editTime?: string
+    id?: string
+    isDelete?: number
+    maxCount?: string
+    maxSize?: string
+    spaceLevel?: number
+    spaceName?: string
+    spaceType?: number
+    totalCount?: string
+    totalSize?: string
+    updateTime?: string
+    userId?: string
+    userVO?: UserVO
   }
 
   type testDownloadFileUsingGETParams = {
@@ -290,6 +364,7 @@ declare namespace API {
   type uploadPictureByUrlUsingPOSTParams = {
     id?: string
     picName?: string
+    spaceId?: string
     uploadType?: string
     /** url */
     url: string
@@ -298,6 +373,7 @@ declare namespace API {
   type uploadPictureUsingPOSTParams = {
     id?: string
     picName?: string
+    spaceId?: string
     uploadType?: string
   }
 

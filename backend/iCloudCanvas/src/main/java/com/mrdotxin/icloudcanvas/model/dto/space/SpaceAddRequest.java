@@ -9,7 +9,7 @@ public class SpaceAddRequest implements Serializable {
 
     private String spaceName;
 
-    private String spaceLevel;
+    private Integer spaceLevel;
 
     private static final long serialVersionUID = 1L;
 }

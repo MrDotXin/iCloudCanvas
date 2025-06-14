@@ -32,7 +32,7 @@ public abstract class FileUploaderTemplate {
             file = File.createTempFile(uploadPath, null);
             transferToTempFile(inputSource, file);
 
-            if (limitSize > 0) {
+            if (limitSize >= 0) {
                 ThrowUtils.throwIf(FileUtil.size(file) > limitSize, ErrorCode.OPERATION_ERROR, "空间超限! 无法保存个人空间");
             }
 

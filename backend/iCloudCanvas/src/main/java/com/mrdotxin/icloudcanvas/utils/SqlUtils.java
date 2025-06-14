@@ -1,6 +1,11 @@
 package com.mrdotxin.icloudcanvas.utils;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.apache.commons.lang3.StringUtils;
+
+import java.util.List;
 
 /**
  * SQL 工具
@@ -21,5 +26,23 @@ public class SqlUtils {
             return false;
         }
         return !StringUtils.containsAny(sortField, "=", "(", ")", " ");
+    }
+
+    public static <T> boolean checkFieldExist(IService<T> service, String fieldName, Object value) {
+        QueryWrapper<T> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq(fieldName, value);
+        return service.count(queryWrapper) > 0;
+    }
+
+    public static <T> T getFieldByFieldName(IService<T> service, String fieldName, Object value) {
+        QueryWrapper<T> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq(fieldName, value);
+        return service.getOne(queryWrapper);
+    }
+
+    public static <T> List<T> listFieldByFieldName(IService<T> service, String fieldName, Object value) {
+        QueryWrapper<T> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq(fieldName, value);
+        return service.list(queryWrapper);
     }
 }
